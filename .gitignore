@@ -1,0 +1,26 @@
+# Ignore Python virtual environment
+venv/
+myVenv/
+
+# Ignore Django database & migrations
+*.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore environment variables
+.env
+.env.example  # Keep only an example file
+
+# Ignore compiled/static files
+staticfiles/
+media/
+node_modules/
+
+# Ignore Docker-related files
+*.log
+docker-compose.override.yml
+
+# Ignore VS Code and system files
+.vscode/
+.DS_Store
