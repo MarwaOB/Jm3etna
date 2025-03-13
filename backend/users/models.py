@@ -35,10 +35,20 @@ class CustomUser(AbstractUser):
 
 
 class Skill(models.Model): 
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def create_default_skills():
+        skills = [
+            "Cuisine", "Nettoyage", "Service", "Gestion d’événements",
+            "Aide aux personnes âgées", "Soins médicaux de base",
+        ]
+        for skill in skills:
+            Skill.objects.get_or_create(name=skill)
+
 
 
 class Volunteer(models.Model):
