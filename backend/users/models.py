@@ -44,7 +44,7 @@ class Skill(models.Model):
     def create_default_skills():
         skills = [
             "Cuisine", "Nettoyage", "Service", "Gestion d’événements",
-            "Aide aux personnes âgées", "Soins médicaux de base",
+            "Aide aux personnes âgées", 
         ]
         for skill in skills:
             Skill.objects.get_or_create(name=skill)
