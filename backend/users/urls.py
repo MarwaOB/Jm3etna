@@ -8,7 +8,10 @@ urlpatterns = [
   path('sign_up_volunteer', views.sign_up_volunteer, name='sign_up_volunteer'),   
 
 path('organisationHomepage', views.organisationHomepage, name='organisationHomepage'),   
-path('volunteerHomepage', views.volunteerHomepage, name='volunteerHomepage'),   
+path('volunteerHomepage', views.volunteerHomepage, name='volunteerHomepage'),  
+
+
+path('auth/org' , views.dashboard_orga , name='Dashboard-organisation'),
 
 
 

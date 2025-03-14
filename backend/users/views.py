@@ -3,9 +3,17 @@ from django.shortcuts import render, redirect
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
 import logging
-from .models import CustomUser, Volunteer, Skill, Organisation
+from .models import CustomUser, Volunteer, Skill, Organisation,Need, HumanNeed, Event, FinancialNeed,        MaterialNeed
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.db.models import Sum
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.timezone import now
+
+
+
 
 
 logger = logging.getLogger(__name__)
@@ -147,3 +155,54 @@ def organisationHomepage(request):
 @csrf_exempt
 def home(request):
     return render(request, 'home.html') 
+
+
+def dashboard_orga(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+
+    # Ensure the user is an organisation
+    if request.user.role != "organisation":
+        return JsonResponse({"error": "User is not an organisation"}, status=403)
+
+    organisation = get_object_or_404(Organisation, user=request.user)
+
+    volunteers_count = HumanNeed.objects.filter(need__organisation=organisation).aggregate(
+        total_volunteers=Sum('volunteersCount')
+    )['total_volunteers'] or 0  # Default to 0 if no volunteers found
+
+    last_30_days = timezone.now().date() - timedelta(days=30)
+
+    events_ongoing = Event.objects.filter(needs__organisation=organisation, status=False , dateStart__gte=last_30_days).distinct().count()
+    events_done = Event.objects.filter(needs__organisation=organisation, status=True, dateStart__gte=last_30_days).distinct().count()
+
+    today = now().date()
+
+    last_7_days = [(today - timedelta(days=i)) for i in range(7)]
+
+
+    daily_data = []
+
+    for day in last_7_days:
+        food_collected = MaterialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(Sum("itemCount"))["itemCount__sum"] or 0
+        money_collected = FinancialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(Sum("amountCollected"))["amountCollected__sum"] or 0
+        volunteers = HumanNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(Sum("volunteersCount"))["volunteersCount__sum"] or 0
+
+        
+        daily_data.append({
+            "date": day.strftime("%Y-%m-%d"),
+            "food_collected": food_collected,
+            "money_collected": money_collected,
+            "volunteers_count": volunteers
+        })
+
+    data = {
+        "name": organisation.user.username,  
+        "volunteers_count": volunteers_count,
+        "events_ongoing": events_ongoing,
+        "events_done": events_done,
+        "daily_data": daily_data, 
+    }
+
+
+    return JsonResponse(data)
