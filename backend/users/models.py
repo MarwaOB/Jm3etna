@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
-
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = [
@@ -66,6 +66,9 @@ class Organisation(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     description = models.TextField()  
     location = models.TextField()  
+    events = models.ManyToManyField("Event", related_name="organisations") 
+
+
 
 
 class Need(models.Model):
@@ -81,17 +84,28 @@ class Need(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="needs")
     volunteers = models.ManyToManyField(Volunteer, related_name="needs", blank=True)
 
+
     def __str__(self):
         return self.title
     
+class Event(models.Model):
+    eventName= models.TextField()
+    needs = models.ManyToManyField(Need, related_name="needs", blank=True)
+    dateStart = models.DateField(default=timezone.now)
+    dateEnd = models.DateField(null=True, blank=True)
+    status = models.BooleanField(null=True, blank=True) #done or ongoing
+
 
 class HumanNeed(models.Model):
     need = models.OneToOneField(Need, on_delete=models.CASCADE, related_name="human_need")
     requiredPeople = models.IntegerField(default=1)
     volunteersCount = models.IntegerField(default=0) 
     skill = models.ForeignKey(Skill, on_delete=models.SET_NULL, null=True, blank=True) 
+    dateSubmit = models.DateField(null=True, blank=True)
     startTime = models.TimeField(null=True, blank=True) 
     endTime = models.TimeField(null=True, blank=True) 
+    eventId = models.ForeignKey(Event,on_delete=models.CASCADE, related_name="event",null=True, blank=True)
+
  
     def __str__(self):
         return f"Human Need for {self.need.title} - {self.requiredPeople} people required"
@@ -102,6 +116,8 @@ class MaterialNeed(models.Model):
     itemName = models.CharField(max_length=100)
     requiredQuantity = models.IntegerField(default=1)
     itemCount = models.IntegerField(default=0) 
+    dateSubmit = models.DateField(null=True, blank=True)
+    foodCollected = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Material Need: {self.itemName} x {self.requiredQuantity} for {self.need.title}"
@@ -111,6 +127,7 @@ class FinancialNeed(models.Model):
     need = models.OneToOneField(Need, on_delete=models.CASCADE, related_name="financial_need")
     amountRequired = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amountCollected = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    dateSubmit = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"Financial Need: {self.amountRequired} for {self.need.title}"
