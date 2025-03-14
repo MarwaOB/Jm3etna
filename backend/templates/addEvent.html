@@ -1,0 +1,60 @@
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="description" placeholder="Event Description" required></textarea>
+    <input type="text" name="eventName" placeholder="Event Name" required>
+    <input type="date" name="dateStart" required>
+    <input type="date" name="dateEnd" required>
+    
+    <div id="needs-container">
+        <div class="need">
+            <input type="text" name="need_title" placeholder="Need Title" required>
+            <textarea name="need_description" placeholder="Need Description" required></textarea>
+            <select name="need_type" class="need-type-selector">
+                <option value="human">Human</option>
+                <option value="material">Material</option>
+                <option value="financial">Financial</option>
+            </select>
+
+            <div class="human-fields">
+                <input type="number" name="required_people" placeholder="Required People">
+                <select name="skill">
+                    <option value="">No specific skill</option>
+                    {% for skill in skills %}
+                    <option value="{{ skill.id }}">{{ skill.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="time" name="start_time">
+                <input type="time" name="end_time">
+            </div>
+
+            <div class="material-fields">
+                <input type="text" name="item_name" placeholder="Item Name">
+                <input type="number" name="required_quantity" placeholder="Quantity">
+            </div>
+
+            <div class="financial-fields">
+                <input type="number" name="amount_required" step="0.01" placeholder="Amount Required">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="addNeed()">Add Another Need</button>
+    <button type="submit">Create Event</button>
+</form>
+
+<script>
+    function addNeed() {
+        let needContainer = document.getElementById("needs-container");
+        let newNeed = document.querySelector(".need").cloneNode(true);
+        needContainer.appendChild(newNeed);
+    }
+
+    document.addEventListener("change", function(event) {
+        if (event.target.classList.contains("need-type-selector")) {
+            let needDiv = event.target.closest(".need");
+            needDiv.querySelector(".human-fields").style.display = event.target.value === "human" ? "block" : "none";
+            needDiv.querySelector(".material-fields").style.display = event.target.value === "material" ? "block" : "none";
+            needDiv.querySelector(".financial-fields").style.display = event.target.value === "financial" ? "block" : "none";
+        }
+    });
+</script>
