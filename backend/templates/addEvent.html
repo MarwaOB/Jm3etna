@@ -1,4 +1,4 @@
-<form method="POST">
+<form action="{% url 'create_event' %}" method="POST">
     {% csrf_token %}
     <textarea name="description" placeholder="Event Description" required></textarea>
     <input type="text" name="eventName" placeholder="Event Name" required>

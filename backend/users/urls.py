@@ -19,7 +19,8 @@ path('create_event/', create_event, name='create_event'),
 path('event_list', views.event_list, name='event_list'),
 
 path('auth/org' , views.dashboard_orga , name='Dashboard-organisation'),
-path('auth/org/opportunities' , views.dashboard_opportunies , name='Dashboard-organisation-opportunities'),
+path('auth/org/opportunities' , views.dashboard_opportunities , name='Dashboard-organisation-opportunities'),
 
+path('addEventPage', views.addEventPage, name='addEventPage'),
 
 ]

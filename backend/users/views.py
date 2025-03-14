@@ -1,14 +1,20 @@
 from django.contrib.auth import authenticate, login, get_user_model
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
-import logging
-from .models import Event, CustomUser, Volunteer, Skill, Organisation, HumanNeed, MaterialNeed, FinancialNeed, Need
-from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
-from django.utils.timezone import now
-from django.db.models import Q
 from django.utils.dateparse import parse_date
+from django.utils import timezone
+from django.db.models import Q, Sum
+from datetime import datetime, timedelta
+from django.utils.timezone import now
+import logging
+import json
+
+from .models import (
+    CustomUser, Volunteer, Skill, Organisation, Need, 
+    HumanNeed, MaterialNeed, FinancialNeed, Event
+)
 
 
 
@@ -47,9 +53,9 @@ def sign_in(request):
 
             # Redirection en fonction du rôle
             if user.role == "volunteer":
-                return redirect('scheduleVolunteer')
+                return redirect('volunteerHomepage')
             else:
-                return redirect('create_event')
+                return redirect('organisationHomepage')
 
         except Exception as e:
             logger.error(f"Erreur lors de la connexion : {str(e)}")
@@ -129,7 +135,7 @@ def sign_up_volunteer(request):
                 volunteer.skills.add(skill)
 
             login(request, user)
-            return redirect('scheduleVolunteer')
+            return redirect('volunteerHomepage')
 
         except IntegrityError:
             return render(request, 'sign_up_volunteer.html', {'error': "Nom d'utilisateur, email ou téléphone déjà utilisé.", 'skills': Skill.objects.all()})
@@ -164,6 +170,10 @@ def contributeVolunteer(request):
     volunteer = Volunteer.objects.get(user=request.user)  # Get the logged-in volunteer
     return render(request, 'contributeVolunteer.html', {'volunteer': volunteer})
 
+def addEventPage(request):
+    return render(request, 'addEvent.html')
+
+
 @csrf_exempt
 def filter_needs(request, category):
     current_time = now()
@@ -171,6 +181,8 @@ def filter_needs(request, category):
     
     volunteer = request.user.volunteer
     needs = volunteer.needs.all()
+    needsRendered = None  
+
 
     if category == "Past Contributions":
         past_needs = needs.filter(date__lt=today)
@@ -285,7 +297,6 @@ def join_need(request, need_id):
 
     need.save()
     return JsonResponse({'message': 'Successfully joined the need!'})
-
 @csrf_exempt
 def create_event(request):
     if request.method == "POST":
@@ -293,53 +304,73 @@ def create_event(request):
         description = request.POST.get("description", "").strip()
         date_start = request.POST.get("dateStart", "").strip()
         date_end = request.POST.get("dateEnd", "").strip()
-        organisation = Organisation.objects.first()
+
+        # Get the organisation linked to the logged-in user
+        user = request.user
+        organisation = Organisation.objects.filter(user=user).first()
+
+        if not organisation:
+            return render(request, "addEvent.html", {"error": "No organisation found for this user."})
 
         # Convert date strings to date objects
         date_start = parse_date(date_start) if date_start else None
         date_end = parse_date(date_end) if date_end else None
 
+        # Create the event
         event = Event.objects.create(
             eventName=event_name,
             description=description,
-            dateStart=date_start,  # Déjà parsé
-            dateEnd=date_end,  # Déjà parsé
+            dateStart=date_start,
+            dateEnd=date_end,
             organisation=organisation
         )
 
-        
+        print(f'Event Created: {event}')
+
         # Handling multiple needs
         need_titles = request.POST.getlist("need_title")
         need_descriptions = request.POST.getlist("need_description")
         need_types = request.POST.getlist("need_type")
-        
+
         for i in range(len(need_titles)):
             need = Need.objects.create(
-                title=need_titles[i],
-                description=need_descriptions[i],
+                title=need_titles[i].strip(),
+                description=need_descriptions[i].strip(),
                 type=need_types[i],
-                organisation=organisation
+                organisation=organisation,
+                event=event
             )
-            
+
+            # Link the need to the event
+
+            # Create specific need types if applicable
             if need_types[i] == "human":
                 required_people = int(request.POST.getlist("required_people")[i])
                 skill_id = request.POST.getlist("skill")[i]
-                skill = Skill.objects.get(id=skill_id) if skill_id else None
+                skill = Skill.objects.filter(id=skill_id).first()  # Use `.filter().first()` to avoid errors
                 start_time = request.POST.getlist("start_time")[i]
                 end_time = request.POST.getlist("end_time")[i]
-                HumanNeed.objects.create(need=need, requiredPeople=required_people, skill=skill, startTime=start_time, endTime=end_time)
-            
+                HumanNeed.objects.create(
+                    need=need,
+                    requiredPeople=required_people,
+                    skill=skill,
+                    startTime=start_time,
+                    endTime=end_time
+                )
+
             elif need_types[i] == "material":
-                item_name = request.POST.getlist("item_name")[i]
+                item_name = request.POST.getlist("item_name")[i].strip()
                 required_quantity = int(request.POST.getlist("required_quantity")[i])
                 MaterialNeed.objects.create(need=need, itemName=item_name, requiredQuantity=required_quantity)
-                
+
             elif need_types[i] == "financial":
                 amount_required = float(request.POST.getlist("amount_required")[i])
                 FinancialNeed.objects.create(need=need, amountRequired=amount_required)
-        
+
+        event.save()
+
         return redirect("event_list")
-    
+
     skills = Skill.objects.all()
     return render(request, "addEvent.html", {"skills": skills})
 
@@ -348,7 +379,6 @@ def event_list(request):
     events = Event.objects.all()
     return render(request, 'event_list.html', {'events': events})
     
-
 @csrf_exempt
 def dashboard_orga(request):
     if not request.user.is_authenticated:
@@ -362,35 +392,35 @@ def dashboard_orga(request):
     volunteers_count = HumanNeed.objects.filter(need__organisation=organisation).aggregate(
         total_volunteers=Sum('volunteersCount')
     )['total_volunteers'] or 0  # Default to 0 if no volunteers found
- 
 
     today = now().date()
     last_30_days = [(today - timedelta(days=i)) for i in range(30)]
-    
+
     events_ongoing = Event.objects.filter(
-        needs__organisation=organisation,
+        need__organisation=organisation,
         dateEnd__gte=today,  # The event has not ended
         dateStart__gte=today - timedelta(days=30)  
     ).distinct().count()
 
     events_done = Event.objects.filter(
-        needs__organisation=organisation,
+        need__organisation=organisation,
         dateEnd__lt=today,  # The event has ended
         dateStart__gte=today - timedelta(days=30)  
     ).distinct().count()
-
 
     daily_data = []
     monthly_data = []
 
     for day in last_30_days:
-        food_collected = MaterialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
-            Sum("itemCount"))["itemCount__sum"] or 0
-        money_collected = FinancialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
-            Sum("amountCollected"))["amountCollected__sum"] or 0
-        volunteers = HumanNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
-            Sum("volunteersCount"))["volunteersCount__sum"] or 0
-        
+        food_collected = MaterialNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
+          Sum("itemCount"))["itemCount__sum"] or 0
+
+        money_collected = FinancialNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
+           Sum("amountCollected"))["amountCollected__sum"] or 0
+
+        volunteers = HumanNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
+              Sum("volunteersCount"))["volunteersCount__sum"] or 0
+
         entry = {
             "date": day.strftime("%Y-%m-%d"),
             "food_collected": food_collected,
@@ -401,7 +431,6 @@ def dashboard_orga(request):
         monthly_data.append(entry)
         if day >= today - timedelta(days=7):
             daily_data.append(entry)
-        
 
     data = {
         "name": organisation.user.username,  
@@ -409,26 +438,25 @@ def dashboard_orga(request):
         "events_ongoing": events_ongoing,
         "events_done": events_done,
         "daily_data": daily_data, 
-        "monthly_data":monthly_data,
+        "monthly_data": monthly_data,
     }
-
 
     return JsonResponse(data)
 
 
 @csrf_exempt
 def calculate_event_progress(event):
-    needs = Need.query.filter_by(event_id=event.id).all()
+    needs = Need.objects.filter(event=event)
     total_progress = 0
-    need_count = len(needs)
+    need_count = needs.count()
 
     for need in needs:
         if need.type == "human":
-            progress = 100 if datetime.now() > need.endTime else 0
+            progress = 100 if datetime.now() > need.date else 0
         elif need.type == "material":
-            progress = (need.itemCount / need.requiredQuantity) * 100 if need.requiredQuantity > 0 else 0
+            progress = (need.material_need.itemCount / need.material_need.requiredQuantity) * 100 if need.material_need and need.material_need.requiredQuantity > 0 else 0
         elif need.type == "financial":
-            progress = (need.amountCollected / need.amountRequired) * 100 if need.amountRequired > 0 else 0
+            progress = (need.financial_need.amountCollected / need.financial_need.amountRequired) * 100 if need.financial_need and need.financial_need.amountRequired > 0 else 0
         else:
             progress = 0
 
@@ -437,8 +465,9 @@ def calculate_event_progress(event):
     overall_progress = total_progress / need_count if need_count > 0 else 0
     return round(overall_progress, 2)
 
+
 @csrf_exempt
-def dashboard_opportunies(request):
+def dashboard_opportunities(request):
     if not request.user.is_authenticated:
         return JsonResponse({"error": "User not authenticated"}, status=401)
 
@@ -447,7 +476,7 @@ def dashboard_opportunies(request):
 
     organisation = get_object_or_404(Organisation, user=request.user)
 
-    events = Event.objects.filter(needs__organisation=organisation).distinct()
+    events = Event.objects.filter(need__organisation=organisation).distinct()
 
     event_data = []
 
@@ -470,3 +499,4 @@ def dashboard_opportunies(request):
         })
 
     return JsonResponse({"events": event_data})
+
