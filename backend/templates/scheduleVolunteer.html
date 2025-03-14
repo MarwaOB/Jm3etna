@@ -298,26 +298,6 @@
     margin-top: 10px;
 }
 
-.join-btn{
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.join-btn {
-    background-color: #54BD95;
-    color: white;
-}
-
-
-
-.join-btn:hover {
-    background-color: #45a080;
-}
-
 
 .Speech-section img
 {
@@ -358,14 +338,7 @@
         <i class="fas fa-search"></i>
       </div>
       <div>
-        <button
-  id="needFilterBtn"
-  class="need-filter-btn"
-  onclick="filterCourse()"
->
-  Next Contributions 
-</button>
-
+        <button id="needFilterBtn" class="need-filter-btn" onclick="filterCourse()"> Next Contributions </button>
       </div>
 
       <div class="needs-grid">
@@ -410,9 +383,7 @@
     
             <!-- Buttons Section -->
             <div class="need-actions">
-                {% if category == "Next Contributions" %}
-                    <button class="join-btn" onclick="joinNeed('{{ need.id }}')">Join</button>
-                {% elif category == "Past Contributions" %}
+                {% if category == "Past Contributions" %}
                     <span class="completed-label">Completed</span>
                 {% endif %}
             </div>
@@ -489,7 +460,7 @@ function filterCourse() {
 function applyFilter(category) {
     console.log(`Filtering by: ${category}`);
 
-    fetch(`/needs/${category}/`)
+    fetch(`/needs/filter/${category}/`)
         .then(response => response.text())
         .then(data => {
             document.querySelector(".needs-grid").innerHTML = data;
@@ -497,16 +468,6 @@ function applyFilter(category) {
         .catch(error => console.error("Error fetching needs:", error));
 }
 
-function applyFilter(category) {
-    console.log(`Filtering by: ${category}`);
-
-    fetch(`/needs/${category}/`)
-        .then(response => response.text())
-        .then(data => {
-            document.querySelector(".needs-grid").innerHTML = data; // Only replace course cards
-        })
-        .catch(error => console.error("Error fetching needs:", error));
-}
 function joinCourse(needId) {
     fetch(`/join-need/${needId}/`, { 
         method: 'POST', 

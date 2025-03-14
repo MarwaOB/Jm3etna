@@ -5,16 +5,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.utils import timezone
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from datetime import datetime, timedelta
 from django.utils.timezone import now
 import logging
 import json
 
-from .models import (
-    CustomUser, Volunteer, Skill, Organisation, Need, 
-    HumanNeed, MaterialNeed, FinancialNeed, Event
-)
+from .models import CustomUser, Volunteer, Skill, Organisation, Need, HumanNeed, MaterialNeed, FinancialNeed, Event
+
 
 
 
@@ -22,7 +20,6 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 CustomUser = get_user_model()  # Utiliser le modèle utilisateur personnalisé
-
 
 @csrf_exempt
 def sign_in(request):
@@ -145,8 +142,6 @@ def sign_up_volunteer(request):
 
     skills = Skill.objects.all()
     return render(request, 'sign_up_volunteer.html', {'skills': skills})
-
-
 @csrf_exempt
 def volunteerHomepage(request):
     return render(request, 'volunteerHomepage.html')
@@ -173,16 +168,16 @@ def contributeVolunteer(request):
 def addEventPage(request):
     return render(request, 'addEvent.html')
 
-
 @csrf_exempt
 def filter_needs(request, category):
     current_time = now()
     today = current_time.date()
-    
-    volunteer = request.user.volunteer
-    needs = volunteer.needs.all()
-    needsRendered = None  
 
+    volunteer = request.user.volunteer
+
+    needs = volunteer.needs.all()
+
+    needsRendered = None  
 
     if category == "Past Contributions":
         past_needs = needs.filter(date__lt=today)
@@ -193,56 +188,58 @@ def filter_needs(request, category):
         future_needs = needs.filter(date__gte=today)
         future_human_needs = needs.filter(type="human", date=today, human_need__endTime__gte=current_time.time())
         needsRendered = future_needs | future_human_needs
+        print(needsRendered)
 
-    return render(request, "needPartial.html", {"needs": needsRendered, "category": category, "volunteer": volunteer})
 
-    
+    return render(request, "needPartialFiltered.html", {
+        "needs": needsRendered,
+        "category": category,
+        "volunteer": volunteer
+    }) 
 @csrf_exempt    
 def filterNeedExplore(request, category):
     current_time = now()
     today = current_time.date()
     
     valid_needs = Need.objects.filter(date__gte=today)  # Get all future needs
-    
-    unfulfilled_human_needs = Need.objects.filter(
+
+    unfulfilled_human_needs = valid_needs.filter(
         type="human",
-        date=today,
-        human_need__endTime__gte=current_time.time(),  # Only ongoing human needs
-        human_need__volunteersCount__lt=models.F("human_need__requiredPeople")
+    ).filter(
+        Q(date__gt=today) |  # Future needs (ignore time)
+        Q(date=today, human_need__endTime__gte=current_time.time())  # Ongoing needs today
     )
-    
-    unfulfilled_material_needs = Need.objects.filter(
+
+    unfulfilled_material_needs = valid_needs.filter(
         type="material",
         material_need__itemCount__lt=F("material_need__requiredQuantity"),
         date__gte=today
     )
-    
-    unfulfilled_financial_needs = Need.objects.filter(
-        type="financial",
-        date__gte=today,
-        financial_need__amountCollected__lt=F("financial_need__requiredAmount")
+
+    unfulfilled_financial_needs = valid_needs.filter(
+    type="financial",
+    date__gte=today,
+    financial_need__amountCollected__lt=F("financial_need__amountRequired") 
     )
+
+    needsFiltered = None
     
-    if category == "Organizational assistance":
-        needsFiltered = unfulfilled_human_needs
-    elif category == "Financial Support":
+    
+    if category.strip() == "Financial Support":
         needsFiltered = unfulfilled_financial_needs
-    elif category == "Financial Support":
-        needs_filtered = unfulfilled_material_needs
-    else:
-        needsFiltered = valid_needs
+    elif category.strip() == "materials and food support":
+        needsFiltered = unfulfilled_material_needs
+    else:     
+        needsFiltered = unfulfilled_human_needs
+
     
     return render(request, "needPartial.html", {"needs": needsFiltered, "category": category, "volunteer": request.user.volunteer})
-
 @csrf_exempt
 def join_need(request, need_id):
     user = request.user  
     need = get_object_or_404(Need, id=need_id)
 
-    # Get the volunteer object
     volunteer, created = Volunteer.objects.get_or_create(user=user)
-
-    # Check if the user has already joined this need
     already_joined = need.volunteers.filter(id=volunteer.id).exists()
 
     if need.type == "human":
@@ -265,31 +262,25 @@ def join_need(request, need_id):
     elif need.type == "material":
         if need.material_need.itemCount >= need.material_need.requiredQuantity:
             return JsonResponse({"error": "Max material donations already reached!"}, status=400)
-
-        need.material_need.itemCount += 1
-        need.material_need.save()
-        need.volunteers.add(volunteer)
-
-    elif need.type == "financial":
-        if need.financial_need.amountCollected >= need.financial_need.amountRequired:
-            return JsonResponse({"error": "Donation goal already reached!"}, status=400)
-
-        amount_donated = request.POST.get("amount", 0)
+        
+        # Get the amount of items donated from the request
+        items_donated = request.POST.get("amount", 1)  # Default to 1 if not provided
         try:
-            amount_donated = float(amount_donated)
+            items_donated = int(items_donated)  # Convert to integer
         except ValueError:
-            return JsonResponse({"error": "Invalid amount"}, status=400)
-
-        if amount_donated <= 0:
-            return JsonResponse({"error": "Donation amount must be positive"}, status=400)
-
-        need.financial_need.amountCollected += amount_donated
-        need.financial_need.save()
-
-        # Update volunteer's money contribution
-        volunteer.moneyVolunteered += amount_donated
-        volunteer.save()
-
+            return JsonResponse({"error": "Invalid quantity"}, status=400)
+        
+        if items_donated <= 0:
+            return JsonResponse({"error": "Donation quantity must be positive"}, status=400)
+            
+        # Check if donation would exceed the required quantity
+        remaining_needed = need.material_need.requiredQuantity - need.material_need.itemCount
+        if items_donated > remaining_needed:
+            return JsonResponse({"error": f"Only {remaining_needed} more items needed. Please adjust your donation."}, status=400)
+        
+        # Update the count with the donated amount
+        need.material_need.itemCount += items_donated
+        need.material_need.save()
         need.volunteers.add(volunteer)
 
     else:
@@ -297,6 +288,7 @@ def join_need(request, need_id):
 
     need.save()
     return JsonResponse({'message': 'Successfully joined the need!'})
+
 @csrf_exempt
 def create_event(request):
     if request.method == "POST":
@@ -378,72 +370,10 @@ def create_event(request):
 def event_list(request):
     events = Event.objects.all()
     return render(request, 'event_list.html', {'events': events})
-    
-@csrf_exempt
-def dashboard_orga(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "User not authenticated"}, status=401)
+ 
 
-    if request.user.role != "organisation":
-        return JsonResponse({"error": "User is not an organisation"}, status=403)
-
-    organisation = get_object_or_404(Organisation, user=request.user)
-
-    volunteers_count = HumanNeed.objects.filter(need__organisation=organisation).aggregate(
-        total_volunteers=Sum('volunteersCount')
-    )['total_volunteers'] or 0  # Default to 0 if no volunteers found
-
-    today = now().date()
-    last_30_days = [(today - timedelta(days=i)) for i in range(30)]
-
-    events_ongoing = Event.objects.filter(
-        need__organisation=organisation,
-        dateEnd__gte=today,  # The event has not ended
-        dateStart__gte=today - timedelta(days=30)  
-    ).distinct().count()
-
-    events_done = Event.objects.filter(
-        need__organisation=organisation,
-        dateEnd__lt=today,  # The event has ended
-        dateStart__gte=today - timedelta(days=30)  
-    ).distinct().count()
-
-    daily_data = []
-    monthly_data = []
-
-    for day in last_30_days:
-        food_collected = MaterialNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
-          Sum("itemCount"))["itemCount__sum"] or 0
-
-        money_collected = FinancialNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
-           Sum("amountCollected"))["amountCollected__sum"] or 0
-
-        volunteers = HumanNeed.objects.filter(need__date=day, need__organisation=organisation).aggregate(
-              Sum("volunteersCount"))["volunteersCount__sum"] or 0
-
-        entry = {
-            "date": day.strftime("%Y-%m-%d"),
-            "food_collected": food_collected,
-            "money_collected": money_collected,
-            "volunteers_count": volunteers
-        }
-
-        monthly_data.append(entry)
-        if day >= today - timedelta(days=7):
-            daily_data.append(entry)
-
-    data = {
-        "name": organisation.user.username,  
-        "volunteers_count": volunteers_count,
-        "events_ongoing": events_ongoing,
-        "events_done": events_done,
-        "daily_data": daily_data, 
-        "monthly_data": monthly_data,
-    }
 
     return JsonResponse(data)
-
-
 @csrf_exempt
 def calculate_event_progress(event):
     needs = Need.objects.filter(event=event)
@@ -500,3 +430,55 @@ def dashboard_opportunities(request):
 
     return JsonResponse({"events": event_data})
 
+def dashboard_orga(request):
+    thirty_days_ago = timezone.now().date() - timedelta(days=30)
+    
+    # Filtering events from the last 30 days
+    recent_events = Event.objects.filter(dateStart__gte=thirty_days_ago)
+    
+    # Number of volunteers in human needs
+    human_volunteers = HumanNeed.objects.filter(need__date__gte=thirty_days_ago).aggregate(
+        total_volunteers=Sum('volunteersCount')
+    )["total_volunteers"] or 0
+    
+    # Count of events done (ended in the last 30 days)
+    events_done = recent_events.filter(dateEnd__lt=timezone.now().date()).count()
+    
+    # Count of ongoing events (started but not ended yet)
+    events_ongoing = recent_events.filter(dateStart__lte=timezone.now().date(), dateEnd__gte=timezone.now().date()).count()
+    
+    # Number of ongoing needs
+    needs_ongoing = Need.objects.filter(date__gte=thirty_days_ago).count()
+    
+    # Collect event-wise stats
+    event_stats = []
+    for event in recent_events:
+        financial_collected = FinancialNeed.objects.filter(need__event=event).aggregate(
+            total_collected=Sum('amountCollected')
+        )["total_collected"] or 0
+        
+        material_collected = MaterialNeed.objects.filter(need__event=event).aggregate(
+            total_collected=Sum('itemCount')
+        )["total_collected"] or 0
+        
+        human_collected = HumanNeed.objects.filter(need__event=event).aggregate(
+            total_collected=Sum('volunteersCount')
+        )["total_collected"] or 0
+        
+        event_stats.append({
+            "event_name": event.eventName,
+            "financial_collected": float(financial_collected),
+            "material_collected": material_collected,
+            "human_collected": human_collected
+        })
+    
+    # Response data
+    data = {
+        "human_volunteers": human_volunteers,
+        "events_done": events_done,
+        "events_ongoing": events_ongoing,
+        "needs_ongoing": needs_ongoing,
+        "event_details": event_stats
+    }
+    
+    return JsonResponse(data)
