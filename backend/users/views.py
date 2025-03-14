@@ -351,14 +351,122 @@ def event_list(request):
 
 @csrf_exempt
 def dashboard_orga(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+
+    if request.user.role != "organisation":
+        return JsonResponse({"error": "User is not an organisation"}, status=403)
+
+    organisation = get_object_or_404(Organisation, user=request.user)
+
+    volunteers_count = HumanNeed.objects.filter(need__organisation=organisation).aggregate(
+        total_volunteers=Sum('volunteersCount')
+    )['total_volunteers'] or 0  # Default to 0 if no volunteers found
+ 
+
+    today = now().date()
+    last_30_days = [(today - timedelta(days=i)) for i in range(30)]
+    
+    events_ongoing = Event.objects.filter(
+        needs__organisation=organisation,
+        dateEnd__gte=today,  # The event has not ended
+        dateStart__gte=today - timedelta(days=30)  
+    ).distinct().count()
+
+    events_done = Event.objects.filter(
+        needs__organisation=organisation,
+        dateEnd__lt=today,  # The event has ended
+        dateStart__gte=today - timedelta(days=30)  
+    ).distinct().count()
+
+
+    daily_data = []
+    monthly_data = []
+
+    for day in last_30_days:
+        food_collected = MaterialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
+            Sum("itemCount"))["itemCount__sum"] or 0
+        money_collected = FinancialNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
+            Sum("amountCollected"))["amountCollected__sum"] or 0
+        volunteers = HumanNeed.objects.filter(dateSubmit=day, need__organisation=organisation).aggregate(
+            Sum("volunteersCount"))["volunteersCount__sum"] or 0
+        
+        entry = {
+            "date": day.strftime("%Y-%m-%d"),
+            "food_collected": food_collected,
+            "money_collected": money_collected,
+            "volunteers_count": volunteers
+        }
+
+        monthly_data.append(entry)
+        if day >= today - timedelta(days=7):
+            daily_data.append(entry)
+        
+
+    data = {
+        "name": organisation.user.username,  
+        "volunteers_count": volunteers_count,
+        "events_ongoing": events_ongoing,
+        "events_done": events_done,
+        "daily_data": daily_data, 
+        "monthly_data":monthly_data,
+    }
+
+
     return JsonResponse(data)
 
 
 @csrf_exempt
 def calculate_event_progress(event):
+    needs = Need.query.filter_by(event_id=event.id).all()
+    total_progress = 0
+    need_count = len(needs)
+
+    for need in needs:
+        if need.type == "human":
+            progress = 100 if datetime.now() > need.endTime else 0
+        elif need.type == "material":
+            progress = (need.itemCount / need.requiredQuantity) * 100 if need.requiredQuantity > 0 else 0
+        elif need.type == "financial":
+            progress = (need.amountCollected / need.amountRequired) * 100 if need.amountRequired > 0 else 0
+        else:
+            progress = 0
+
+        total_progress += progress
+
+    overall_progress = total_progress / need_count if need_count > 0 else 0
     return round(overall_progress, 2)
 
 @csrf_exempt
 def dashboard_opportunies(request):
-    return JsonResponse({"events": event_data})
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
 
+    if request.user.role != "organisation":
+        return JsonResponse({"error": "User is not an organisation"}, status=403)
+
+    organisation = get_object_or_404(Organisation, user=request.user)
+
+    events = Event.objects.filter(needs__organisation=organisation).distinct()
+
+    event_data = []
+
+    for event in events:
+        if event.dateEnd and event.dateEnd < now().date():
+            status = "Completed"
+        elif event.dateStart > now().date():
+            status = "Not Yet"
+        else:
+            status = "On Going"
+
+        progress = calculate_event_progress(event)
+
+        event_data.append({
+            "eventName": event.eventName,
+            "dateStart": event.dateStart,
+            "dateEnd": event.dateEnd,
+            "status": status,
+            "progress": progress,
+        })
+
+    return JsonResponse({"events": event_data})
