@@ -1,10 +1,13 @@
-import SideBar from "../app/components/SideBar/SideBar";
+
+import ContributePage from "./pages/contributePage/ContributePage";
+
+
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen bg-[rgb(255,255,255)]">
-      <SideBar />
-     
+    <div className="flex min-h-screen bg-white">
+      <ContributePage/>
+
     </div>
   );
 }
