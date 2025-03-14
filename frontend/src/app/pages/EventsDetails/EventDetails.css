@@ -1,0 +1,143 @@
+.event-details-container {
+  max-width: 900px; /* Increased width for desktop */
+  margin: 40px auto; /* More margin for better spacing */
+  padding: 30px;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+/* Event Information */
+.event-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.event-info h2 {
+  font-size: 28px; /* Increased size for desktop */
+  color: #333;
+}
+
+.event-info p {
+  font-size: 18px; /* More readable on large screens */
+  color: #555;
+}
+
+/* Section Headings */
+h3 {
+  margin-top: 25px;
+  font-size: 20px;
+  color: #222;
+}
+
+/* Needs Section */
+.needs-section {
+  display: flex;
+  flex-wrap: wrap; /* Cards will wrap if necessary */
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.need-card {
+  background: rgba(30, 141, 115, 0.2);
+  width: 48%;
+  padding: 20px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border-left: 6px solid #1E8D73;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centers content vertically */
+  text-align: center; /* Ensures uniform text alignment */
+  min-height: 180px;
+}
+
+/* Standardized spacing between text elements */
+.need-card h3 {
+  color: #1E8D73;
+  font-size: 20px;
+  margin-bottom: 12px; /* Ensures equal spacing */
+}
+
+.need-card p {
+  font-size: 16px;
+  color: #444;
+  margin: 8px 0; /* Ensures equal spacing */
+}
+
+
+/* Empty Needs Placeholder */
+.empty-need-card {
+  width: 100%;
+  padding: 40px;
+  text-align: center;
+  border: 2px dashed #aaa;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  color: #777;
+  font-size: 16px;
+  font-style: italic;
+  margin: 10px 0;
+}
+
+/* Need Form */
+.add-need-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px; /* Adds spacing between form elements */
+  background: rgba(30, 141, 115, 0.2);;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Labels */
+.add-need-form label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 10px;
+  display: block;
+}
+
+/* Inputs and Selects */
+select, input {
+  width: 100%; /* Each field is full-width on separate lines */
+  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+/* Skill and Start Time on Separate Lines */
+.need-form-row {
+  display: flex;
+  flex-direction: column; /* Ensures stacking */
+  gap: 10px;
+}
+
+/* Full-width input fields */
+input[type="time"], 
+input[type="number"], 
+input[type="text"] {
+  width: 100%;
+}
+
+/* Button Styling */
+button {
+  background-color: #FFC728;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: rgba(30, 141, 115, 0.2);
+}
