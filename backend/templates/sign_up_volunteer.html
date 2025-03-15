@@ -66,7 +66,9 @@
             {% if error %}
             <p class="text-red-500 text-center">{{ error }}</p>
             {% endif %}
-
+            {% if error %}
+            <p style="color: red; text-align: center;">{{ error }}</p>
+            {% endif %}
             <!-- Bouton d'inscription -->
             <button type="submit" class="w-full my-5 py-2 shadow-lg shadow-teal-500/50 hover:shadow-teal-500/40 text-white font-semibold rounded-lg" style="background-color: #1B7F67;">
                 S'inscrire
