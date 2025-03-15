@@ -4,114 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .signup-container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .form-group input[type="submit"] {
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-            border: none;
-        }
-        .form-group input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
 </head>
-<body>
-
-    <div class="signup-container">
-        <h2>Inscription</h2>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
         <form action="{% url 'sign_up_volunteer' %}" method="POST">
             {% csrf_token %}
-            
-            <div class="form-group">
+            <h2 class="text-4xl font-bold text-center mb-4">Inscription</h2>
+            <p class="text-gray-500 mb-4 mt-1 text-center">Déjà un compte ? <a href="/sign_in" class="text-teal-600 font-semibold">Connectez-vous</a></p>
+
+
+            <!-- Nom d'utilisateur -->
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="username">Nom d'utilisateur</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required placeholder="Nom d'utilisateur" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-            
-            <div class="form-group">
-                <label for="birthDate">Date de naissance :</label>
-                <input type="date" id="birthDate" name="birthDate" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Compétences :</label>
 
-                {% for skill in skills %}
-                    <div>
-                        <input type="checkbox" name="skills" value="{{ skill.id }}" id="skill_{{ skill.id }}">
-                        <label for="skill_{{ skill.id }}">{{ skill.name }}</label>
-                    </div>
-                {% endfor %}
+            <!-- Date de naissance -->
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="birthDate">Date de naissance</label>
+                <input type="date" id="birthDate" name="birthDate" required class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none">
             </div>
-            
-            
 
-            <div class="form-group">
+            <!-- Compétences -->
+            <div class="flex flex-col text-gray-400 py-2">
+                <label>Compétences</label>
+                <div class="mt-2">
+                    {% for skill in skills %}
+                        <div class="flex items-center">
+                            <input type="checkbox" name="skills" value="{{ skill.id }}" id="skill_{{ skill.id }}" class="mr-2">
+                            <label for="skill_{{ skill.id }}">{{ skill.name }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required placeholder="example@gmail.com" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-            
-            <div class="form-group">
+
+            <!-- Numéro de téléphone -->
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="phone">Numéro de téléphone</label>
-                <input type="text" id="phone" name="phone" required>
+                <input type="text" id="phone" name="phone" required placeholder="Numéro de téléphone" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-            
-            
-            <div class="form-group">
+
+            <!-- Mot de passe -->
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required placeholder="Mot de passe" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-            
-            <div class="form-group">
+
+            <!-- Confirmer le mot de passe -->
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="password2">Confirmer le mot de passe</label>
-                <input type="password" id="password2" name="password2" required>
+                <input type="password" id="password2" name="password2" required placeholder="Confirmer le mot de passe" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
 
             {% if error %}
-            <p style="color: red; text-align: center;">{{ error }}</p>
+            <p class="text-red-500 text-center">{{ error }}</p>
             {% endif %}
 
-            <div class="form-group">
-                <input type="submit" value="S'inscrire">
-            </div>
+            <!-- Bouton d'inscription -->
+            <button type="submit" class="w-full my-5 py-2 shadow-lg shadow-teal-500/50 hover:shadow-teal-500/40 text-white font-semibold rounded-lg" style="background-color: #1B7F67;">
+                S'inscrire
+            </button>
         </form>
     </div>
-
 </body>
 </html>

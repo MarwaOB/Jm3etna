@@ -3,115 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .signup-container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 350px;
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .form-group textarea {
-            resize: vertical;
-            height: 80px;
-        }
-        .form-group input[type="submit"] {
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-            border: none;
-            font-size: 16px;
-            padding: 10px;
-        }
-        .form-group input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Inscription Organisation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
 </head>
-<body>
-
-    <div class="signup-container">
-        <h2>Inscription</h2>
-        <form action="{% url 'sign_up_organisation' %}" method="POST">
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <form action="{% url 'sign_up_organization' %}" method="POST">
             {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="username">Nom d'organisation</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-
-            <div class="form-group">
-                <label for="location">Localisation</label>
-                <input type="text" id="location" name="location" placeholder="Ville, Pays" required>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" placeholder="Parlez un peu de vous..." required></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Numéro de téléphone</label>
-                <input type="text" id="phone" name="phone" required>
+            <h2 class="text-4xl font-bold text-center">Inscription Organisation</h2>
+            <p class="text-gray-500 mb-4 mt-1 text-center">Déjà un compte ? <a href="/sign_in" class="text-teal-600 font-semibold">Connectez-vous</a></p>
+           
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="organizationName">Nom de l'organisation</label>
+                <input type="text" id="organizationName" name="organizationName" required placeholder="Nom de l'organisation" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
            
-            <div class="form-group">
+            <div class="flex flex-col text-gray-400 py-2">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required placeholder="Mot de passe" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-
-            <div class="form-group">
-                <label for="password2">Confirmer le mot de passe</label>
-                <input type="password" id="password2" name="password2" required>
+           
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="email">Email de contact</label>
+                <input type="email" id="email" name="email" required placeholder="example@gmail.com" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
-
-            
-
-            {% if error %}
-            <p style="color: red; text-align: center;">{{ error }}</p>
-            {% endif %}
-            
-            <div class="form-group">
-                <input type="submit" value="S'inscrire">
+           
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="contactPerson">Personne de contact</label>
+                <input type="text" id="contactPerson" name="contactPerson" required placeholder="Nom du contact" class="rounded-lg w-full px-4 py-2 border border-gray-700 focus:border-gray-400 focus:outline-none placeholder-gray-400">
             </div>
+           
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="location">Localisation</label>
+                <select id="location" name="location" required class="w-full px-4 py-2 border rounded-md bg-white border-gray-300 focus:ring-teal-500 focus:border-teal-500">
+                    <option value="">Sélectionnez un lieu</option>
+                    <option value="Algiers">Alger</option>
+                    <option value="Oran">Oran</option>
+                    <option value="Constantine">Constantine</option>
+                </select>
+            </div>
+           
+            <div class="flex flex-col text-gray-400 py-2">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required placeholder="Description de l'organisation" class="w-full px-4 py-2 border rounded-md bg-white border-gray-300 focus:ring-teal-500 focus:border-teal-500" rows="3"></textarea>
+            </div>
+           
+            <button type="submit" class="w-full my-5 py-2 shadow-lg shadow-teal-500/50 hover:shadow-teal-500/40 text-white font-semibold rounded-lg" style="background-color: #1B7F67;">S'inscrire</button>
         </form>
     </div>
-
 </body>
 </html>

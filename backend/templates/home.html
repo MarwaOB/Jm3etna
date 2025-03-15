@@ -1,133 +1,188 @@
-<!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel/slick/slick-theme.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil</title>
+    <title>SkillShare - Empowering Volunteerism</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-        }
-
-        /* Header */
-        header {
-            background: #343a40;
-            color: white;
-            padding: 15px 30px;
+        .navbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            padding: 20px 100px;
         }
 
-        header ul {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-        }
-
-        header ul li {
-            cursor: pointer;
+        .logo {
+            color: #54BD95;
+            font-size: 24px;
             font-weight: bold;
         }
 
-        /* Section principale */
-        section {
+        ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+            color: #A6A6A6;
+        }
+
+        li:hover {
+            color: black;
+            text-decoration: underline;
+            text-decoration-color: #54BD95;
+            text-decoration-thickness: 2px;
+        }
+
+        .auth button
+{
+background: none;
+border: none;
+color:#A6A6A6;
+width: 120px;
+height: 40px;
+background-color:#54BD95;
+border-radius: 16px;
+color:aliceblue;
+padding-left: 8px;
+padding-right: 8px;
+
+}
+.auth button:hover
+{
+    background-color:#54BD95;
+    color: white;
+    border-radius: 10px;
+    transition: .5s;
+    cursor: pointer;
+}
+
+        .hero {
             display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 60px 100px;
+        }
+
+        .hero-text {
             flex: 1;
-            text-align: center;
-            padding: 50px;
-            background: url('https://source.unsplash.com/1600x900/?community,helping') no-repeat center center/cover;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            font-family: 'Baloo 2', sans-serif;
+            color: #54BD95;
+            margin-bottom: 20px;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .hero button {
+            background-color: #54BD95;
             color: white;
-        }
-
-        section div {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-        }
-
-        h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        p {
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
-        button {
-            background: #ff6b6b;
-            color: white;
+            padding: 15px 30px;
             border: none;
-            padding: 10px 20px;
+            border-radius: 30px;
             font-size: 16px;
-            border-radius: 5px;
             cursor: pointer;
-            transition: 0.3s;
         }
 
-        button:hover {
-            background: #ff4f4f;
-        }
-
-        /* Footer */
-        footer {
-            background: #343a40;
-            color: white;
+        .features {
+            padding: 60px 100px;
             text-align: center;
-            padding: 10px;
         }
 
-        footer h4 {
-            margin-bottom: 5px;
+        .features h2 {
+            font-size: 36px;
+            color: #54BD95;
+            margin-bottom: 20px;
+        }
+
+        .features-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+
+        .feature {
+            width: 30%;
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature h3 {
+            font-size: 22px;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .feature p {
+            font-size: 16px;
+            color: #777;
+            margin-top: 10px;
+        }
+
+        .footer {
+            background-color: black;
+            color: white;
+            padding: 60px 100px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-
-<header>
-    <ul>
-        <li>JM3ETNA</li>
-    </ul>
-    <ul>
-        <form action="{% url 'sign_in' %}" method="GET">
-            <button>Sign In</button>
-        </form>
-        <form action="{% url 'sign_up_organisation' %}" method="GET">
-            <button>Sign Up Organisation</button>
-        </form>
-        <form action="{% url 'sign_up_volunteer' %}" method="GET">
-            <button>Sign Up Volunteer</button>
-        </form>
-    </ul>
-</header>
-
-<section>
-    <div>
-        <h3>Bienvenue sur Jm3etna</h3>
-        <p>Une plateforme dédiée au volontariat et à la solidarité communautaire.</p>
-        <button>En savoir plus</button>
+    <div class="navbar">
+        <h1 class="logo">Jm3etna</h1>
+        
+        <div class="auth">
+            <a href="{% url 'sign_in' %}"><button>Sign In </button></a>
+            <a href="{% url 'sign_up_organisation' %}"><button>Sign Up Organisation</button></a>
+            <a href="{% url 'sign_up_volunteer' %}"><button>Sign Up Volunteer</button></a>
+        </div>
     </div>
-</section>
 
-<footer>
-    <h4>Made with ❤️</h4>
-    <p>© 2025 - Tous droits réservés</p>
-</footer>
+    <div class="hero">
+        <div class="hero-text">
+            <h1>Empowering Community Solidarity & Volunteerism</h1>
+            <p>SkillShare connects volunteers and organizations to create meaningful impact. Join our platform to offer your skills, collaborate on projects, and foster community engagement!</p>
+            <button>Get Started</button>
+        </div>
+    </div>
 
+    <div class="features">
+        <h2>Why Try Jm3etna?</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <h3>Community Forum</h3>
+                <p>Engage in discussions, share ideas, and collaborate with other volunteers and organizations.</p>
+            </div>
+            <div class="feature">
+                <h3>Needs Management for Organizations</h3>
+                <p>Organizations list events with required help. They track stats and manage contributions.</p>
+            </div>
+            <div class="feature">
+                <h3>Volunteer Opportunities</h3>
+                <p>Find and participate in projects that align with your skills and passions.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 SkillShare. All rights reserved.</p>
+    </div>
 </body>
 </html>
