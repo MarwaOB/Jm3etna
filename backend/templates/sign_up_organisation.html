@@ -8,7 +8,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <form action="{% url 'sign_up_organization' %}" method="POST">
+        <form action="{% url 'sign_up_organisation' %}" method="POST">
             {% csrf_token %}
             <h2 class="text-4xl font-bold text-center">Inscription Organisation</h2>
             <p class="text-gray-500 mb-4 mt-1 text-center">Déjà un compte ? <a href="/sign_in" class="text-teal-600 font-semibold">Connectez-vous</a></p>
