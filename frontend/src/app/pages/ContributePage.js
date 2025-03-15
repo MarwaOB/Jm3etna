@@ -44,13 +44,13 @@ const ContributePage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-white font-playfair">
-      <div className="fixed top-0 left-0 h-full w-64 bg-white">
-        <SideBar />
-      </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 ml-64">
-        <div className="w-full max-w-screen-lg flex flex-col items-center">
+
+    <div className="flex-1 flex flex-col items-center justify-center ml-4 md:ml-8 lg:ml-15 xl:ml-20 p-4 md:p-6 bg-white font-playfair">
+
+      <div className="w-full max-w-screen-lg flex flex-col items-center">
+
+  
           <div className="text-left mb-4 w-full">
             <h1 className="text-xl md:text-2xl font-semibold text-black">
               Make an Impact in Your Community!
@@ -106,7 +106,7 @@ const ContributePage = () => {
          
         </div>
       </div>
-    </div>
+    
   );
 };
 
