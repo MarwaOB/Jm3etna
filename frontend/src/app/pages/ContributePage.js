@@ -1,12 +1,12 @@
 "use client";
 
-import SideBar from "../../components/SideBar/SideBar";
-import FinanceCard2 from "../../components/contributeCards/FinanceCard2";
-import FoodCard3 from "../../components/contributeCards/FoodCard3";
-import OrgCard1 from "../../components/contributeCards/OrgCard1";
+import SideBar from "../components/SideBar/SideBar";
+import FinanceCard2 from "../components/contributeCards/FinanceCard2";
+import FoodCard3 from "../components/contributeCards/FoodCard3";
+import OrgCard1 from "../components/contributeCards/OrgCard1";
 import { useState } from "react";
-import searchIcon from "../../icons/search.svg";
-import notificationsIcon from "../../icons/notification.svg";
+import searchIcon from "../icons/search.svg";
+
 
 // Sample Data (replace with API data)
 const foodItems = [
