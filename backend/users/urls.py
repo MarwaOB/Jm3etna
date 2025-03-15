@@ -17,10 +17,13 @@ path('needs/explore/<str:category>/', views.filterNeedExplore, name='filterNeedE
 path("join-need/<int:need_id>/", views.join_need, name="join_need"),
 path('create_event/', create_event, name='create_event'),
 path('event_list', views.event_list, name='event_list'),
-
 path('auth/org' , views.dashboard_orga , name='Dashboard-organisation'),
 path('auth/org/opportunities' , views.dashboard_opportunities , name='Dashboard-organisation-opportunities'),
-
 path('addEventPage', views.addEventPage, name='addEventPage'),
+path('auth/org/listVolunteers', views.listVolunteers, name='listVolunteers'),
+path('auth/org/listVolunteers/<int:volunteer_id>', views.getVolunteerProfile, name='volunteerProfile'),
+  path('forum_view/', views.forum_view, name='forum_view'),
+    path('send_message/', views.send_message, name='send_message'),
+        path('get_messages/', views.get_messages, name='get_messages'),  # ✅ Add this line
 
 ]

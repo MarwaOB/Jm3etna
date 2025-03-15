@@ -5,11 +5,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.utils import timezone
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Count, Min
 from datetime import datetime, timedelta
 from django.utils.timezone import now
+from geopy.distance import geodesic
 import logging
 import json
+import math
+import requests
+from django.conf import settings
+from .models import Message
+
 
 from .models import CustomUser, Volunteer, Skill, Organisation, Need, HumanNeed, MaterialNeed, FinancialNeed, Event
 
@@ -47,6 +53,8 @@ def sign_in(request):
 
             # Authentifier et connecter l'utilisateur
             login(request, user)
+            print(request.session.session_key)
+
 
             # Redirection en fonction du rôle
             if user.role == "volunteer":
@@ -59,6 +67,7 @@ def sign_in(request):
             return render(request, 'signIn.html', {'error': "Une erreur s'est produite."})
 
     return render(request, 'signIn.html')
+
 @csrf_exempt
 def sign_up_organisation(request):
     if request.method == "POST":
@@ -113,7 +122,9 @@ def sign_up_volunteer(request):
         password2 = request.POST.get('password2')
         birth_date = request.POST.get('birthDate')
         selected_skills = request.POST.getlist('skills')  # Récupérer les compétences sélectionnées
-
+        print(username)
+        print(email)
+        print(phone)
         if not username or not email or not phone or not password or not birth_date:
             return render(request, 'sign_up_volunteer.html', {'error': "Tous les champs sont requis.", 'skills': Skill.objects.all()})
 
@@ -124,6 +135,8 @@ def sign_up_volunteer(request):
             user = CustomUser.objects.create_user(
                 username=username, email=email, telephone=phone, password=password, role='volunteer'
             )
+            print(user)
+
             volunteer = Volunteer.objects.create(user=user, birthDate=birth_date)
 
             # Ajouter les compétences sélectionnées
@@ -282,12 +295,36 @@ def join_need(request, need_id):
         need.material_need.itemCount += items_donated
         need.material_need.save()
         need.volunteers.add(volunteer)
+    elif need.type == "financial":
+        if need.financial_need.amountCollected >= need.financial_need.amountRequired:
+            return JsonResponse({"error": "Max financial donations already reached!"}, status=400)
+        
+        # Get the amount of items donated from the request
+        items_donated = request.POST.get("amount", 1)  # Default to 1 if not provided
+        try:
+            items_donated = int(items_donated)  # Convert to integer
+        except ValueError:
+            return JsonResponse({"error": "Invalid quantity"}, status=400)
+        
+        if items_donated <= 0:
+            return JsonResponse({"error": "Donation quantity must be positive"}, status=400)
+            
+        # Check if donation would exceed the required quantity
+        remaining_needed = need.financial_need.amountRequired - need.financial_need.amountCollected
+        if items_donated > remaining_needed:
+            return JsonResponse({"error": f"Only {remaining_needed} more items needed. Please adjust your donation."}, status=400)
+        
+        # Update the count with the donated amount
+        need.financial_need.amountCollected += items_donated
+        need.financial_need.save()
+        need.volunteers.add(volunteer)
 
     else:
         return JsonResponse({"error": "Invalid need type!"}, status=400)
 
     need.save()
     return JsonResponse({'message': 'Successfully joined the need!'})
+
 
 @csrf_exempt
 def create_event(request):
@@ -307,6 +344,17 @@ def create_event(request):
         # Convert date strings to date objects
         date_start = parse_date(date_start) if date_start else None
         date_end = parse_date(date_end) if date_end else None
+
+        # Check for overlapping events
+        overlapping_events = Event.objects.filter(
+            organisation=organisation
+        ).filter(
+            Q(dateStart__lte=date_end, dateEnd__gte=date_start)  # Overlapping condition
+        )
+
+        if overlapping_events.exists():
+            print(f'overlapping_events')
+            return render(request, "addEvent.html", {"error": "Another event from your organization already exists in this period."})
 
         # Create the event
         event = Event.objects.create(
@@ -333,13 +381,10 @@ def create_event(request):
                 event=event
             )
 
-            # Link the need to the event
-
-            # Create specific need types if applicable
             if need_types[i] == "human":
                 required_people = int(request.POST.getlist("required_people")[i])
                 skill_id = request.POST.getlist("skill")[i]
-                skill = Skill.objects.filter(id=skill_id).first()  # Use `.filter().first()` to avoid errors
+                skill = Skill.objects.filter(id=skill_id).first()
                 start_time = request.POST.getlist("start_time")[i]
                 end_time = request.POST.getlist("end_time")[i]
                 HumanNeed.objects.create(
@@ -351,20 +396,15 @@ def create_event(request):
                 )
 
             elif need_types[i] == "material":
-                item_name = request.POST.getlist("item_name")[i].strip()
                 required_quantity = int(request.POST.getlist("required_quantity")[i])
-                MaterialNeed.objects.create(need=need, itemName=item_name, requiredQuantity=required_quantity)
+                MaterialNeed.objects.create(need=need, requiredQuantity=required_quantity)
 
             elif need_types[i] == "financial":
                 amount_required = float(request.POST.getlist("amount_required")[i])
                 FinancialNeed.objects.create(need=need, amountRequired=amount_required)
+        skills = Skill.objects.all()
 
-        event.save()
-
-        return redirect("event_list")
-
-    skills = Skill.objects.all()
-    return render(request, "addEvent.html", {"skills": skills})
+        return redirect("organisationHomepage")  # Redirect directly to organization homepage
 
 @csrf_exempt
 def event_list(request):
@@ -481,4 +521,103 @@ def dashboard_orga(request):
         "event_details": event_stats
     }
     
+    return JsonResponse(data)
+
+@csrf_exempt
+def listVolunteers(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+
+    if request.user.role != "organisation":
+        return JsonResponse({"error": "User is not an organisation"}, status=403)
+
+    organisation = get_object_or_404(Organisation, user=request.user)
+
+    # Get all events organized by this organisation
+    events = Event.objects.filter(organisation=organisation)
+    total_events = events.count()
+
+    if total_events == 0:
+        return JsonResponse({"error": "No events found for this organisation"}, status=404)
+
+    # Get volunteers who participated in all events of this organisation
+    volunteers = Volunteer.objects.annotate(
+        event_count=Count("needs__event", distinct=True)
+    ).filter(
+        event_count=total_events,
+        needs__event__organisation=organisation
+    ).distinct()
+
+    # Format the response
+    volunteer_list = [
+        {
+            "name": f"{volunteer.user.first_name} {volunteer.user.last_name}",
+            "email": volunteer.user.email,
+            "skills": [skill.name for skill in volunteer.skills.all()],
+        }
+        for volunteer in volunteers
+    ]
+
+    return JsonResponse({"volunteers": volunteer_list}, safe=False)
+
+@csrf_exempt
+def getVolunteerProfile(request, volunteer_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+
+    if request.user.role != "organisation":
+        return JsonResponse({"error": "User is not an organisation"}, status=403)
+
+    # Get the volunteer
+    volunteer = get_object_or_404(Volunteer, id=volunteer_id)
+
+    # Get all events where the volunteer participated
+    events = Event.objects.filter(needs__volunteers=volunteer).distinct()
+
+    # Format the response
+    profile_data = {
+        "name": f"{volunteer.user.first_name} {volunteer.user.last_name}",
+        "email": volunteer.user.email,
+        "birthDate": volunteer.birthDate,
+        "hoursVolunteered": volunteer.hoursVolunteered,
+        "moneyVolunteered": str(volunteer.moneyVolunteered),
+        "skills": [skill.name for skill in volunteer.skills.all()],
+        "events": [
+            {
+                "id": event.id,
+                "eventName": event.eventName,
+                "dateStart": event.dateStart.strftime("%Y-%m-%d") if event.dateStart else None,
+                "dateEnd": event.dateEnd.strftime("%Y-%m-%d") if event.dateEnd else None,
+                "description": event.description,
+                "organisation": event.organisation.user.username if event.organisation else None,
+            }
+            for event in events
+        ],
+    }
+
+    return JsonResponse(profile_data, safe=False)
+
+
+def forum_view(request):
+    messages = Message.objects.all()
+    return render(request, 'forum.html', {'messages': messages})
+
+
+def send_message(request):
+    if request.method == 'POST':
+        content = request.POST.get('message')
+        if content:
+            Message.objects.create(user=request.user, content=content)
+            return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
+    
+def get_messages(request):
+    messages = Message.objects.all().order_by('-timestamp')
+    data = {
+        "messages": [
+            {"user": msg.user.username, "content": msg.content, "timestamp": msg.timestamp.strftime("%Y-%m-%d %H:%M")}
+            for msg in messages
+        ]
+    }
     return JsonResponse(data)

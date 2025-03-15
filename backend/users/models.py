@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils.timezone import now
+
 
 
 
@@ -124,7 +126,6 @@ class HumanNeed(models.Model):
 
 class MaterialNeed(models.Model):
     need = models.OneToOneField(Need, on_delete=models.CASCADE, related_name="material_need")
-    itemName = models.CharField(max_length=100)
     requiredQuantity = models.IntegerField(default=1)
     itemCount = models.IntegerField(default=0) 
 
@@ -139,3 +140,13 @@ class FinancialNeed(models.Model):
 
     def __str__(self):
         return f"Financial Need: {self.amountRequired} for {self.need.title}"
+
+    
+class Message(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(default=now)
+
+    class Meta:
+        ordering = ['-timestamp']  # Show latest messages first
+        

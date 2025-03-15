@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        #messages-container {
+            width: 50%;
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        p {
+            margin: 5px 0;
+            padding: 5px;
+            background: #eaeaea;
+            border-radius: 5px;
+        }
+        textarea {
+            width: 50%;
+            height: 60px;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Forum</h2>
+
+<div id="messages-container">
+    {% for msg in messages %}
+    <p><strong>{{ msg.user.username }}:</strong> {{ msg.content }} <small>{{ msg.timestamp }}</small></p>
+    {% endfor %}
+</div>
+
+<textarea id="message-input" placeholder="Type your message..."></textarea>
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    function fetchMessages() {
+        fetch("{% url 'get_messages' %}")  // Create a Django view that returns messages as JSON
+        .then(response => response.json())
+        .then(data => {
+            let messagesContainer = document.getElementById("messages-container");
+            messagesContainer.innerHTML = "";  // Clear old messages
+            data.messages.forEach(msg => {
+                let p = document.createElement("p");
+                p.innerHTML = `<strong>${msg.user}:</strong> ${msg.content} <small>${msg.timestamp}</small>`;
+                messagesContainer.appendChild(p);
+            });
+        });
+    }
+
+    function sendMessage() {
+        let messageContent = document.getElementById('message-input').value;
+        if (!messageContent.trim()) return;
+
+        fetch("{% url 'send_message' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "message=" + encodeURIComponent(messageContent)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchMessages();  // Refresh messages without reloading
+                document.getElementById('message-input').value = "";  // Clear input
+            }
+        });
+    }
+
+    setInterval(fetchMessages, 2000);  // Refresh messages every 2 seconds
+</script>
+
+</body>
+</html>
