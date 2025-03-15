@@ -71,18 +71,21 @@
 
 <script>
     function fetchMessages() {
-        fetch("{% url 'get_messages' %}")  // Create a Django view that returns messages as JSON
+        fetch("{% url 'get_messages' %}")
         .then(response => response.json())
         .then(data => {
-            let messagesContainer = document.getElementById("messages-container");
-            messagesContainer.innerHTML = "";  // Clear old messages
+            let container = document.getElementById("messages-container");
+            container.innerHTML = "";
             data.messages.forEach(msg => {
-                let p = document.createElement("p");
-                p.innerHTML = `<strong>${msg.user}:</strong> ${msg.content} <small>${msg.timestamp}</small>`;
-                messagesContainer.appendChild(p);
+                let messageElement = document.createElement("p");
+                messageElement.innerHTML = `<strong>${msg.user}:</strong> ${msg.content} <small>${msg.timestamp}</small>`;
+                container.appendChild(messageElement);
             });
         });
     }
+
+    // Fetch messages every 2 seconds
+    setInterval(fetchMessages, 2000);
 
     function sendMessage() {
         let messageContent = document.getElementById('message-input').value;
@@ -99,13 +102,11 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                fetchMessages();  // Refresh messages without reloading
-                document.getElementById('message-input').value = "";  // Clear input
+                document.getElementById('message-input').value = "";
+                fetchMessages();  // Fetch new messages immediately after sending
             }
         });
     }
-
-    setInterval(fetchMessages, 2000);  // Refresh messages every 2 seconds
 </script>
 
 </body>

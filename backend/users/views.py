@@ -8,7 +8,6 @@ from django.utils import timezone
 from django.db.models import Q, Sum, F, Count, Min
 from datetime import datetime, timedelta
 from django.utils.timezone import now
-from geopy.distance import geodesic
 import logging
 import json
 import math
@@ -613,7 +612,7 @@ def send_message(request):
 
     
 def get_messages(request):
-    messages = Message.objects.all().order_by('-timestamp')
+    messages = Message.objects.all().order_by('-timestamp')[:50]  # Get latest 50 messages
     data = {
         "messages": [
             {"user": msg.user.username, "content": msg.content, "timestamp": msg.timestamp.strftime("%Y-%m-%d %H:%M")}
