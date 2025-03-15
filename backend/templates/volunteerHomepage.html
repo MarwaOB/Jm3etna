@@ -59,6 +59,12 @@
                 <input type="submit" value="contributeVolunteer">
             </div>
         </form>
+        <form action="{% url 'forum_view' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="submit" value=" Go to Forum">
+            </div>
+        </form>
     </div>
 
 </body>
