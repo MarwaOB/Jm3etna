@@ -1,16 +1,8 @@
+'use client';
+import dynamic from 'next/dynamic';
 
-import SideBar from "./components/SideBar/SideBar";
-import ContributePage from "./pages/ContributePage";
-import SchedulePage from "./pages/SchedulePage";
-
-
+const Map = dynamic(() => import('./pages/Maps'), { ssr: false });
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen bg-white">
-      
-      <SideBar/>
-
-    </div>
-  );
+  return <Map />;
 }

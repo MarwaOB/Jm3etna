@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <!-- Import Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+   
+    .profile {
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+    }
+    
+    .profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        display: flex;
+        min-height: 100vh;
+        background-color: #f8f9fa;
+      }
+
+     
+      /* Header */
+      header {
+        padding: 15px 30px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 90%;
+        position: fixed;
+        top: 0;
+        left: 110px;
+        height: 60px;
+        border-radius: 100px;
+      }
+
+      /* User Info */
+      .user-info {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .user-info button {
+        background: #ffc728;
+        border: 2px solid #ffc728;
+        color: white;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: bold;
+        cursor: default;
+      }
+
+      .coins-value {
+        background: white;
+        border: 2px solid #ffc728;
+        color: black;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: bold;
+        cursor: default;
+      }
+
+      .coins-value i {
+        font-size: 16px;
+        color: white;
+      }
+
+      .content {
+        flex: 1;
+        margin-left: 90px;
+        padding: 20px;
+        text-align: left;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1%;
+      }
+
+      /* Welcome Section */
+      .welcome-section {
+        margin-left: 30px;
+        text-align: left;
+        padding-top: 10px;
+      }
+
+      /* 🔹 Speech Section Typography Update */
+      .Speech-section h3 {
+        font-family: Poppins, sans-serif;
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 40px;
+        padding: 30px 200px;
+        text-align: left;
+        margin-top: 20px;
+        text-underline-position: from-font;
+        text-decoration-skip-ink: none;
+      }
+      .Search-Bar {
+        border-radius: 44px;
+        padding: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center; /* Assure l'alignement vertical */
+        width: 70%;
+
+        margin: 0 auto; /* Centre la barre de recherche */
+        background: white;
+        border: 2px solid #ffc728;
+        color: black;
+        margin-bottom: 30px;
+      }
+
+      .Search-Bar input {
+        border: none;
+        width: 80%;
+        padding-left: 10px;
+        outline: none; /* Enlève l'effet de focus bleu par défaut */
+        background: transparent; /* Assure que le fond reste blanc */
+      }
+
+      .need-filter-btn {
+        border: 2px solid #54bd95;
+        border-bottom: none;
+        width: 100%;
+        text-align: center;
+        align-items: center;
+
+        border-radius: 10px 10px 0 0; /* Adjusted top corners */
+
+        padding-left: 30px;
+        padding-right: 30px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        font-weight: bold;
+        background-color: white;
+      }
+      .need-filter-btn:hover
+      {
+        cursor: pointer;
+        background-color:#54bd95;
+        color: white;
+      }
+
+      .dropdown-menu {
+    position: absolute; /* Now it will be near the button */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 1000;
+    display: none;
+    width: 180px; /* Adjust width as needed */
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+.dropdown-option {
+    background: white;
+    border: 2px solid #ffc728; /* Yellow border */
+    color: #ffc728; /* Yellow text */
+    padding: 12px 25px;
+    margin: 8px 0;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    width: 150px;
+    font-size: 10px;
+}
+
+.dropdown-option:hover {
+    background: rgba(255, 199, 40, 0.2); /* Light yellow hover effect */
+}
+
+.dropdown-option.selected {
+    background: #ffc728; /* Fully yellow background */
+    color: white; /* White text */
+    border-color: #ffc728; /* Maintain yellow border */
+}
+
+.needs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 30px;
+    background: white;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #54BD95;
+    width: 100%; /* Ensure full width */
+    min-height: 200px; /* Prevent collapse */
+    justify-content: center;
+    text-align: center;
+}
+.no-results {
+    grid-column: span 3;
+    font-size: 20px;
+    font-weight: bold;
+    color: #54BD95;
+    padding: 20px;
+    text-align: center;
+}
+
+
+      .need-card {
+        border: 2px solid #54bd95;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: left;
+        background: white;
+        transition: transform 0.3s ease;
+      }
+
+      .need-card:hover {
+        transform: scale(1.02);
+      }
+
+      .need-card .need-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .need-card .need-type {
+        background: #ffc728;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+      }
+
+      .need-card .need-details {
+        margin-bottom: 15px;
+      }
+
+      .need-card .need-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .need-card .attendees {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #54bd95;
+      }
+
+      .needs-card .coins {
+        background: #ffc728;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+      }
+      .needs-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.join-btn{
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.join-btn {
+    background-color: #54BD95;
+    color: white;
+}
+
+
+
+.join-btn:hover {
+    background-color: #45a080;
+}
+
+
+.Speech-section img
+{
+  position: absolute;
+  top: 0px;
+}
+
+.user-info
+{
+  position: absolute;
+  right: 0;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .close {
+    float: right;
+    font-size: 25px;
+    cursor: pointer;
+  }
+    </style>
+  </head>
+  <body>
+   
+    <div>
+      <header>
+        <div class="user-info">
+          <button><i class="fas fa-star"></i> Hours contributed {{volunteer.hoursVolunteered}}</button>
+
+          <button class="coins-value"><i class="fas fa-coins"></i> Money contributed {{volunteer.moneyVolunteered}}</button>
+
+      </div>
+          </button>
+        </div>
+      </header>
+    </div>
+    <div class="content">
+      <div class="Speech-section">
+        <h3>
+            Make an impact in your community! Whether it's cooking meals, serving food, donating supplies, or coordinating efforts, there’s a way for everyone to help
+        </h3>
+      </div>
+      <div class="Search-Bar">
+        <input type="text" placeholder="search a field ....." />
+        <i class="fas fa-search"></i>
+      </div>
+      <div>
+        <button
+  id="needFilterBtn"
+  class="need-filter-btn"
+  onclick="filterNeedExplore()"
+>
+Organizationnal assistance
+</button>
+
+      </div>
+
+      <div class="needs-grid">
+        {% if needs %}
+        {% load static %}
+        {% for need in needs %}
+        <div class="need-card" data-id="{{ need.id }}">
+          <div class="need-details">
+              <div class="need-header">
+                  <span>{{ need.date }}</span>
+                  {% if need.type == "human" %}
+                      <span class="need-type">Human Need</span>
+                  {% elif need.type == "material" %}
+                      <span class="need-type">Material Need</span>
+                  {% elif need.type == "financial" %}
+                      <span class="need-type">Financial Need</span>
+                  {% endif %}
+              </div>
+              <h3>{{ need.title }}</h3>
+              <p>{{ need.description }}</p>
+      
+              {% if need.type == "human" %}
+                  <p><strong>Time:</strong> {{ need.human_need.startTime }} - {{ need.human_need.endTime }}</p>
+              {% endif %}
+          </div>
+      
+          <div class="need-meta">
+              {% if need.type == "human" %}
+                  <div class="volunteers">
+                      <i class="fas fa-user"></i> {{ need.human_need.volunteersCount }}/{{ need.human_need.requiredPeople }}
+                  </div>
+              {% elif need.type == "material" %}
+                  <div class="items">
+                      <i class="fas fa-box"></i> {{ need.material_need.itemCount }}/{{ need.material_need.requiredQuantity }} {{ need.material_need.itemName }}
+                  </div>
+              {% elif need.type == "financial" %}
+                  <div class="donations">
+                      <i class="fas fa-dollar-sign"></i> {{ need.financial_need.amountCollected }}/{{ need.financial_need.amountRequired }} DA
+                  </div>
+              {% endif %}
+          </div>
+      
+          <!-- Updated Buttons Section -->
+          <div class="need-actions">
+              {% if need.type == "human" %}
+                  <button class="join-btn" onclick="joinNeed('{{ need.id }}', 'human')">Contribute</button>
+              {% elif need.type == "material" %}
+                  <button class="join-btn" onclick="showContributionModal('{{ need.id }}', 'material', 'Donate Items', 'How many {{ need.material_need.itemName }} would you like to donate?')">Contribute</button>
+              {% elif need.type == "financial" %}
+                  <button class="join-btn" onclick="showContributionModal('{{ need.id }}', 'financial', 'Financial Donation', 'How much would you like to donate (in DA)?')">Contribute</button>
+              {% endif %}
+          </div>
+      </div>
+    {% empty %}
+        <div class="no-results">No Results</div>
+    {% endfor %}
+    
+    {% else %}
+        <div class="no-results">No Results</div>
+    {% endif %}
+    
+    </div>
+    
+         
+        
+      
+    </div>
+    <div id="contributionModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);">
+      <div style="background-color: white; margin: 15% auto; padding: 20px; border: 2px solid #54BD95; border-radius: 10px; width: 300px;">
+        <h3 id="modalTitle" style="color: #54BD95; margin-bottom: 15px;"></h3>
+        <div id="modalContent">
+          <p id="modalDescription"></p>
+          <div id="amountInputContainer" style="margin: 15px 0;">
+            <label for="contributionAmount">Amount to contribute:</label>
+            <input type="number" id="contributionAmount" min="1" step="1" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px;">
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+          <button onclick="closeContributionModal()" style="padding: 8px 15px; border: none; border-radius: 5px; background-color: #ccc; cursor: pointer;">Cancel</button>
+          <button id="confirmContributionBtn" style="padding: 8px 15px; border: none; border-radius: 5px; background-color: #54BD95; color: white; cursor: pointer;">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+  <script>
+let dropdownMenu;
+let currentNeedId = null;
+let currentNeedType = null;
+
+document.addEventListener("DOMContentLoaded", function () {
+    applyFilter("Organizationnal assistance"); // Load default needs when page loads
+});
+
+function filterNeedExplore() {
+    const filterBtn = document.getElementById("needFilterBtn");
+
+    if (!filterBtn) {
+        console.error("Filter button not found!");
+        return;
+    }
+
+    if (!dropdownMenu) {
+        dropdownMenu = document.createElement("div");
+        dropdownMenu.classList.add("dropdown-menu");
+        dropdownMenu.innerHTML = `
+            <div class="dropdown-option selected" data-filter="Organizationnal assistance">Organizationnal assistance</div>
+            <div class="dropdown-option" data-filter="Financial Support">Financial Support</div>
+            <div class="dropdown-option" data-filter="materials and food support">Materials and Food Support</div>
+        `;
+
+        document.body.appendChild(dropdownMenu); // Attach dropdown to the body
+
+        dropdownMenu.addEventListener("click", function (event) {
+            if (event.target.classList.contains("dropdown-option")) {
+                document.querySelectorAll(".dropdown-option").forEach(option => {
+                    option.classList.remove("selected");
+                });
+
+                event.target.classList.add("selected");
+                filterBtn.textContent = event.target.textContent;
+
+                const filterValue = event.target.getAttribute("data-filter");
+                applyFilter(filterValue);
+
+                dropdownMenu.classList.remove("show"); // Hide dropdown after selection
+            }
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!filterBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.remove("show");
+            }
+        });
+    }
+
+    const rect = filterBtn.getBoundingClientRect();
+    dropdownMenu.style.top = `${rect.bottom + window.scrollY}px`;
+    dropdownMenu.style.left = `${rect.left + window.scrollX}px`;
+    dropdownMenu.classList.toggle("show");
+}
+
+function applyFilter(category) {
+    console.log(`Filtering by: ${category}`);
+
+    fetch(`/needs/explore/${category}/`)
+        .then(response => response.text())
+        .then(data => {
+            document.querySelector(".needs-grid").innerHTML = data;
+        })
+        .catch(error => console.error("Error fetching needs:", error));
+}
+
+// Get need type based on card elements
+function getNeedTypeFromCard(card) {
+    const typeElement = card.querySelector('.need-type');
+    if (typeElement) {
+        const typeText = typeElement.textContent;
+        if (typeText.includes('Human')) return 'human';
+        if (typeText.includes('Material')) return 'material';
+        if (typeText.includes('Financial')) return 'financial';
+    }
+    return null;
+}
+
+// Function to show the contribution modal
+function showContributionModal(needId, needType, title, description) {
+    currentNeedId = needId;
+    currentNeedType = needType;
+    
+    const modal = document.getElementById('contributionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const amountInputContainer = document.getElementById('amountInputContainer');
+    const confirmBtn = document.getElementById('confirmContributionBtn');
+    
+    modalTitle.textContent = title || 'Contribute';
+    modalDescription.textContent = description || 'Please enter your contribution details:';
+    
+    // Show/hide amount input based on need type
+    if (needType === 'financial') {
+        amountInputContainer.style.display = 'block';
+        document.getElementById('contributionAmount').value = '';
+    } else if (needType === 'material') {
+        amountInputContainer.style.display = 'block';
+        document.getElementById('contributionAmount').value = '1';
+    } else {
+        amountInputContainer.style.display = 'none';
+    }
+    
+    // Set up confirm button action
+    confirmBtn.onclick = function() {
+        const amount = document.getElementById('contributionAmount').value;
+        joinNeed(needId, needType, amount);
+        closeContributionModal();
+    };
+    
+    modal.style.display = 'block';
+}
+
+// Function to close the contribution modal
+function closeContributionModal() {
+    document.getElementById('contributionModal').style.display = 'none';
+    currentNeedId = null;
+    currentNeedType = null;
+}
+
+function joinNeed(needId, needType, amount) {
+    // If needType is not provided, try to get it from the card
+    if (!needType) {
+        const card = document.querySelector(`.need-card[data-id="${needId}"]`);
+        if (card) {
+            needType = getNeedTypeFromCard(card);
+        }
+    }
+    
+    const formData = new FormData();
+    
+    // Add amount to form data if provided
+    if (amount) {
+        formData.append('amount', amount);
+    }
+    
+    fetch(`/join-need/${needId}/`, { 
+        method: 'POST',
+        body: formData
+        // Removed the headers with CSRF token since the view is exempt
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);  // Show error if any
+        } else {
+            alert(data.message);  // Success message
+            // Refresh the current need list to show updated counts
+            const currentFilter = document.querySelector('.dropdown-option.selected')?.getAttribute('data-filter') || 'Organizationnal assistance';
+            applyFilter(currentFilter);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+  </script>
+</html>

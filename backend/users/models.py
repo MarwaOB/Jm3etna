@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.utils.timezone import now
+
+
+
+
 
 
 class CustomUser(AbstractUser):
@@ -67,6 +74,23 @@ class Organisation(models.Model):
     description = models.TextField()  
     location = models.TextField()  
 
+class Event(models.Model):
+    eventName = models.CharField(max_length=100)
+    dateStart = models.DateField(null=True, blank=True)
+    dateEnd = models.DateField(null=True, blank=True)
+    description = models.TextField(default="No description provided.")
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="events", null=True)
+
+    def clean(self):
+        if self.dateStart and self.dateEnd and self.dateStart > self.dateEnd:
+            raise ValidationError("Start date must be before end date.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Validate before saving
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.eventName
 
 class Need(models.Model):
     NEED_TYPES = [
@@ -78,8 +102,11 @@ class Need(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     type = models.CharField(max_length=10, choices=NEED_TYPES)
+    date = models.DateField(null=True, blank=True)  
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="needs")
     volunteers = models.ManyToManyField(Volunteer, related_name="needs", blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True) 
+
 
     def __str__(self):
         return self.title
@@ -99,7 +126,6 @@ class HumanNeed(models.Model):
 
 class MaterialNeed(models.Model):
     need = models.OneToOneField(Need, on_delete=models.CASCADE, related_name="material_need")
-    itemName = models.CharField(max_length=100)
     requiredQuantity = models.IntegerField(default=1)
     itemCount = models.IntegerField(default=0) 
 
@@ -114,3 +140,13 @@ class FinancialNeed(models.Model):
 
     def __str__(self):
         return f"Financial Need: {self.amountRequired} for {self.need.title}"
+
+    
+class Message(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(default=now)
+
+    class Meta:
+        ordering = ['-timestamp']  # Show latest messages first
+        

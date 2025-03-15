@@ -1,31 +1,38 @@
 "use client";
-import { HashRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, Navigate, Form } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import scheduleIcon from "../../icons/schedule.svg";
-import contributeIcon from "../../icons/contribute.svg";
-import forumIcon from "../../icons/forum.svg";
-import notificationsIcon from "../../icons/notification.svg";
-import arrowIcon from "../../icons/arrow.svg";
-import arrowRightIcon from "../../icons/VectorRight.svg";
-import profilIcon from "../../icons/profil.svg";
-import SchedulePage from "../../pages/SchedulePage";  
-import logoIcon from "../../icons/logo.svg"
-import ContributePage from "../../pages/ContributePage";  
+import scheduleIcon from "../icons/schedule.svg";
+import contributeIcon from "../icons/contribute.svg";
+import forumIcon from "../icons/forum.svg";
+import notificationsIcon from "../icons/notification.svg";
+import arrowIcon from "../icons/arrow.svg";
+import arrowRightIcon from "../icons/VectorRight.svg";
+import profilIcon from "../icons/profil.svg";
+import logoIcon from "../icons/logo.svg";
 
-import Profil from '@/app/pages/Profil';
+import Dashboard from '../pages/Dashbord';
+import VolunteerList from '../pages/VolunteersDetails/VolunteersDetails';
 
-import Forum from '@/app/pages/Forum';
+import Profil from '../pages/Profil';
+
+
+import Forum from '../pages/Forum';
+import EventDetails from '../pages/EventsPage';
+
+
+
 
 
 const menuItems = [
-  { name: "Schedule", icon: scheduleIcon, path: "/schedule", component: SchedulePage },
-  { name: "Contribute", icon: contributeIcon, path: "/contribute", component: SchedulePage },
- { name: "Forum", icon: forumIcon, path: "/forum" , component: Forum },
-   { name: "Profil", icon: notificationsIcon, path: "/profil", component: Profil },
+  { name: "DashBoard", icon: scheduleIcon, path: "/schedule", component:     Dashboard },
+  { name: "Volunteers", icon: contributeIcon, path: "/contribute", component: VolunteerList },
+  { name: "Events Summary", icon: contributeIcon, path: "/eventSummary", component: EventDetails },
+  { name: "Forum", icon: forumIcon, path: "/forum" , component: Forum },
+  { name: "Profil", icon: notificationsIcon, path: "/profil", component: Profil },
 ];
 
-const SideBar = () => {
+const SideBar1 = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [selected, setSelected] = useState("Schedule"); // Set a default selected item
   const [windowWidth, setWindowWidth] = useState(0);
@@ -73,12 +80,9 @@ const SideBar = () => {
       <div className="p-4 flex flex-col h-full">
         {/* Logo */}
         <div className="flex items-center space-x-3">
-  <div className="ml-[40px] w-20 h-20 flex items-center justify-center"> {/* Augmenté de w-10 h-10 à w-16 h-16 */}
-    <Image src={logoIcon} width={300} height={300} alt="Logo" className="invert" /> {/* Augmenté de 150 à 200 */}
-  </div>
-  {!isMobile && isOpen && <h1 className="text-xl font-bold"></h1>}
-</div>
-
+          
+          {!isMobile && isOpen && <h1 className="ml-[30px] text-xl font-bold text-[var(--my-yellow)]">J'm3etna</h1>}
+        </div>
 
         {/* Menu Items - we'll conditionally wrap these in Link components when mounted */}
         <nav className="mt-6 flex-1 flex flex-col gap-1">
@@ -196,4 +200,4 @@ const SideBar = () => {
   );
 };
 
-export default SideBar;
+export default SideBar1;

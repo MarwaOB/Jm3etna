@@ -1,0 +1,51 @@
+{% for need in needs %}
+<div class="need-card" data-id="{{ need.id }}">
+  <div class="need-details">
+      <div class="need-header">
+          <span>{{ need.date }}</span>
+          {% if need.type == "human" %}
+              <span class="need-type">Human Need</span>
+          {% elif need.type == "material" %}
+              <span class="need-type">Material Need</span>
+          {% elif need.type == "financial" %}
+              <span class="need-type">Financial Need</span>
+          {% endif %}
+      </div>
+      <h3>{{ need.title }}</h3>
+      <p>{{ need.description }}</p>
+
+      {% if need.type == "human" %}
+          <p><strong>Time:</strong> {{ need.human_need.startTime }} - {{ need.human_need.endTime }}</p>
+      {% endif %}
+  </div>
+
+  <div class="need-meta">
+      {% if need.type == "human" %}
+          <div class="volunteers">
+              <i class="fas fa-user"></i> {{ need.human_need.volunteersCount }}/{{ need.human_need.requiredPeople }}
+          </div>
+      {% elif need.type == "material" %}
+          <div class="items">
+              <i class="fas fa-box"></i> {{ need.material_need.itemCount }}/{{ need.material_need.requiredQuantity }} {{ need.material_need.itemName }}
+          </div>
+      {% elif need.type == "financial" %}
+          <div class="donations">
+              <i class="fas fa-dollar-sign"></i> {{ need.financial_need.amountCollected }}/{{ need.financial_need.amountRequired }} DA
+          </div>
+      {% endif %}
+  </div>
+
+  <!-- Updated Buttons Section -->
+  <div class="need-actions">
+      {% if need.type == "human" %}
+          <button class="join-btn" onclick="joinNeed('{{ need.id }}', 'human')">Contribute</button>
+      {% elif need.type == "material" %}
+          <button class="join-btn" onclick="showContributionModal('{{ need.id }}', 'material', 'Donate Items', 'How many {{ need.material_need.itemName }} would you like to donate?')">Contribute</button>
+      {% elif need.type == "financial" %}
+          <button class="join-btn" onclick="showContributionModal('{{ need.id }}', 'financial', 'Financial Donation', 'How much would you like to donate (in DA)?')">Contribute</button>
+      {% endif %}
+  </div>
+</div>
+{% empty %}
+<div class="no-results">No Results</div>
+{% endfor %}
